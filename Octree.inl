@@ -175,6 +175,7 @@ inline void OctNode<NodeData, Real>::DepthAndOffset(const long long &index, int 
 	offset[1] = (int((index >> OffsetShift2) & OffsetMask) + 1) & (~(1 << depth));
 	offset[2] = (int((index >> OffsetShift3) & OffsetMask) + 1) & (~(1 << depth));
 }
+
 template <class NodeData, class Real>
 inline int OctNode<NodeData, Real>::Depth(const long long &index) { return int(index & DepthMask); }
 template <class NodeData, class Real>
@@ -185,12 +186,13 @@ void OctNode<NodeData, Real>::centerAndWidth(Point3D<Real> &center, Real &width)
 	offset[0] = (int(off[0]) + 1) & (~(1 << depth));
 	offset[1] = (int(off[1]) + 1) & (~(1 << depth));
 	offset[2] = (int(off[2]) + 1) & (~(1 << depth));
-	width = Real(1.0 / (1 << depth));
+	width = Real(1.0 / (1 << depth)); // 最小体素的width
 	for (int dim = 0; dim < DIMENSION; dim++)
 	{
 		center.coords[dim] = Real(0.5 + offset[dim]) * width;
 	}
 }
+
 template <class NodeData, class Real>
 inline void OctNode<NodeData, Real>::CenterAndWidth(const long long &index, Point3D<Real> &center, Real &width)
 {
@@ -219,7 +221,7 @@ int OctNode<NodeData, Real>::maxDepth(void) const
 		for (int i = 0; i < Cube::CORNERS; i++)
 		{
 			d = children[i].maxDepth();
-			if (!i || d > c)
+			if (!i || d > c) // ((!i) || (d > c))
 			{
 				c = d;
 			}
@@ -227,6 +229,7 @@ int OctNode<NodeData, Real>::maxDepth(void) const
 		return c + 1;
 	}
 }
+
 template <class NodeData, class Real>
 int OctNode<NodeData, Real>::nodes(void) const
 {
@@ -261,6 +264,7 @@ int OctNode<NodeData, Real>::leaves(void) const
 		return c;
 	}
 }
+
 template <class NodeData, class Real>
 int OctNode<NodeData, Real>::maxDepthLeaves(const int &maxDepth) const
 {
@@ -446,6 +450,7 @@ void OctNode<NodeData, Real>::processNodeNodes(OctNode *node, NodeAdjacencyFunct
 	}
 	__processNodeNodes(node, F);
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::processNodeFaces(OctNode *node, NodeAdjacencyFunction *F, const int &fIndex, const int &processCurrent)
@@ -461,6 +466,7 @@ void OctNode<NodeData, Real>::processNodeFaces(OctNode *node, NodeAdjacencyFunct
 		__processNodeFaces(node, F, c1, c2, c3, c4);
 	}
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::processNodeEdges(OctNode *node, NodeAdjacencyFunction *F, const int &eIndex, const int &processCurrent)
@@ -476,6 +482,7 @@ void OctNode<NodeData, Real>::processNodeEdges(OctNode *node, NodeAdjacencyFunct
 		__processNodeEdges(node, F, c1, c2);
 	}
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::processNodeCorners(OctNode *node, NodeAdjacencyFunction *F, const int &cIndex, const int &processCurrent)
@@ -489,6 +496,7 @@ void OctNode<NodeData, Real>::processNodeCorners(OctNode *node, NodeAdjacencyFun
 		children[cIndex].__processNodeCorners(node, F, cIndex);
 	}
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::__processNodeNodes(OctNode *node, NodeAdjacencyFunction *F)
@@ -534,6 +542,7 @@ void OctNode<NodeData, Real>::__processNodeNodes(OctNode *node, NodeAdjacencyFun
 		children[7].__processNodeNodes(node, F);
 	}
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::__processNodeCorners(OctNode *node, NodeAdjacencyFunction *F, const int &cIndex)
@@ -544,6 +553,7 @@ void OctNode<NodeData, Real>::__processNodeCorners(OctNode *node, NodeAdjacencyF
 		children[cIndex].__processNodeCorners(node, F, cIndex);
 	}
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::__processNodeEdges(OctNode *node, NodeAdjacencyFunction *F, const int &cIndex1, const int &cIndex2)
@@ -555,9 +565,15 @@ void OctNode<NodeData, Real>::__processNodeEdges(OctNode *node, NodeAdjacencyFun
 		children[cIndex2].__processNodeEdges(node, F, cIndex1, cIndex2);
 	}
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
-void OctNode<NodeData, Real>::__processNodeFaces(OctNode *node, NodeAdjacencyFunction *F, const int &cIndex1, const int &cIndex2, const int &cIndex3, const int &cIndex4)
+void OctNode<NodeData, Real>::__processNodeFaces(OctNode *node,
+												 NodeAdjacencyFunction *F,
+												 const int &cIndex1,
+												 const int &cIndex2,
+												 const int &cIndex3,
+												 const int &cIndex4)
 {
 	F->Function(this, node);
 	if (children)
@@ -568,17 +584,28 @@ void OctNode<NodeData, Real>::__processNodeFaces(OctNode *node, NodeAdjacencyFun
 		children[cIndex4].__processNodeFaces(node, F, cIndex1, cIndex2, cIndex3, cIndex4);
 	}
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
-void OctNode<NodeData, Real>::ProcessNodeAdjacentNodes(OctNode *node1, const Real &radius1, OctNode *node2, const Real &radius2, NodeAdjacencyFunction *F, const int &processCurrent)
+void OctNode<NodeData, Real>::ProcessNodeAdjacentNodes(OctNode *node1, const Real &radius1,
+													   OctNode *node2, const Real &radius2,
+													   NodeAdjacencyFunction *F,
+													   const int &processCurrent)
 {
 	Point3D<Real> c1, c2;
 	Real w1, w2;
 
 	node1->centerAndWidth(c1, w1);
 	node2->centerAndWidth(c2, w2);
-	ProcessNodeAdjacentNodes(c1.coords[0] - c2.coords[0], c1.coords[1] - c2.coords[1], c1.coords[2] - c2.coords[2], node1, radius1 * w1, node2, radius2 * w2, w2, F, processCurrent);
+	ProcessNodeAdjacentNodes(c1.coords[0] - c2.coords[0],
+							 c1.coords[1] - c2.coords[1],
+							 c1.coords[2] - c2.coords[2],
+							 node1, radius1 * w1,
+							 node2, radius2 * w2, w2,
+							 F,
+							 processCurrent);
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::ProcessNodeAdjacentNodes(const Real &dx, const Real &dy, const Real &dz,
@@ -598,18 +625,30 @@ void OctNode<NodeData, Real>::ProcessNodeAdjacentNodes(const Real &dx, const Rea
 	{
 		return;
 	}
+
 	__ProcessNodeAdjacentNodes(-dx, -dy, -dz, node1, radius1, node2, radius2, width2 / 2, F);
 }
+
 template <class NodeData, class Real>
 template <class TerminatingNodeAdjacencyFunction>
-void OctNode<NodeData, Real>::ProcessTerminatingNodeAdjacentNodes(OctNode *node1, const Real &radius1, OctNode *node2, const Real &radius2, TerminatingNodeAdjacencyFunction *F, const int &processCurrent)
+void OctNode<NodeData, Real>::ProcessTerminatingNodeAdjacentNodes(OctNode *node1, const Real &radius1,
+																  OctNode *node2, const Real &radius2,
+																  TerminatingNodeAdjacencyFunction *F,
+																  const int &processCurrent)
 {
 	Point3D<Real> c1, c2;
 	Real w1, w2;
 	node1->centerAndWidth(c1, w1);
 	node2->centerAndWidth(c2, w2);
-	ProcessTerminatingNodeAdjacentNodes(c1.coords[0] - c2.coords[0], c1.coords[1] - c2.coords[1], c1.coords[2] - c2.coords[2], node1, radius1 * w1, node2, radius2 * w2, w2, F, processCurrent);
+	ProcessTerminatingNodeAdjacentNodes(c1.coords[0] - c2.coords[0],
+										c1.coords[1] - c2.coords[1],
+										c1.coords[2] - c2.coords[2],
+										node1, radius1 * w1,
+										node2, radius2 * w2, w2,
+										F,
+										processCurrent);
 }
+
 template <class NodeData, class Real>
 template <class TerminatingNodeAdjacencyFunction>
 void OctNode<NodeData, Real>::ProcessTerminatingNodeAdjacentNodes(const Real &dx, const Real &dy, const Real &dz,
@@ -631,6 +670,7 @@ void OctNode<NodeData, Real>::ProcessTerminatingNodeAdjacentNodes(const Real &dx
 	}
 	__ProcessTerminatingNodeAdjacentNodes(-dx, -dy, -dz, node1, radius1, node2, radius2, width2 / 2, F);
 }
+
 template <class NodeData, class Real>
 template <class PointAdjacencyFunction>
 void OctNode<NodeData, Real>::ProcessPointAdjacentNodes(const Point3D<Real> &center1, OctNode *node2, const Real &radius2, PointAdjacencyFunction *F, const int &processCurrent)
@@ -638,8 +678,14 @@ void OctNode<NodeData, Real>::ProcessPointAdjacentNodes(const Point3D<Real> &cen
 	Point3D<Real> c2;
 	Real w2;
 	node2->centerAndWidth(c2, w2);
-	ProcessPointAdjacentNodes(center1.coords[0] - c2.coords[0], center1.coords[1] - c2.coords[1], center1.coords[2] - c2.coords[2], node2, radius2 * w2, w2, F, processCurrent);
+	ProcessPointAdjacentNodes(center1.coords[0] - c2.coords[0],
+							  center1.coords[1] - c2.coords[1],
+							  center1.coords[2] - c2.coords[2],
+							  node2, radius2 * w2, w2,
+							  F,
+							  processCurrent);
 }
+
 template <class NodeData, class Real>
 template <class PointAdjacencyFunction>
 void OctNode<NodeData, Real>::ProcessPointAdjacentNodes(const Real &dx, const Real &dy, const Real &dz,
@@ -660,6 +706,7 @@ void OctNode<NodeData, Real>::ProcessPointAdjacentNodes(const Real &dx, const Re
 	}
 	__ProcessPointAdjacentNodes(-dx, -dy, -dz, node2, radius2, width2 / 2, F);
 }
+
 template <class NodeData, class Real>
 template <class PointAdjacencyFunction>
 void OctNode<NodeData, Real>::ProcessPointAdjacentNodes(const Point3D<Real> &center1, const Real &radius1, OctNode *node2, const Real &radius2, PointAdjacencyFunction *F, const int &processCurrent)
@@ -747,6 +794,7 @@ void OctNode<NodeData, Real>::ProcessMaxDepthNodeAdjacentNodes(OctNode<NodeData,
 	node2->centerAndWidth(c2, w2);
 	ProcessMaxDepthNodeAdjacentNodes(c1.coords[0] - c2.coords[0], c1.coords[1] - c2.coords[1], c1.coords[2] - c2.coords[2], node1, radius1 * w1, node2, radius2 * w2, w2, depth, F, processCurrent);
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::ProcessMaxDepthNodeAdjacentNodes(const Real &dx, const Real &dy, const Real &dz,
@@ -772,6 +820,7 @@ void OctNode<NodeData, Real>::ProcessMaxDepthNodeAdjacentNodes(const Real &dx, c
 		__ProcessMaxDepthNodeAdjacentNodes(-dx, -dy, -dz, node1, radius1, node2, radius2, width2 / 2, depth - 1, F);
 	}
 }
+
 template <class NodeData, class Real>
 template <class NodeAdjacencyFunction>
 void OctNode<NodeData, Real>::__ProcessNodeAdjacentNodes(const Real &dx, const Real &dy, const Real &dz,
@@ -856,6 +905,7 @@ void OctNode<NodeData, Real>::__ProcessNodeAdjacentNodes(const Real &dx, const R
 		}
 	}
 }
+
 template <class NodeData, class Real>
 template <class TerminatingNodeAdjacencyFunction>
 void OctNode<NodeData, Real>::__ProcessTerminatingNodeAdjacentNodes(const Real &dx, const Real &dy, const Real &dz,
@@ -1495,6 +1545,8 @@ int OctNode<NodeData, Real>::CommonEdge(const OctNode<NodeData, Real> *node1, co
 		return 0;
 	}
 }
+
+// 获取该角点在当前节点的索引
 template <class NodeData, class Real>
 int OctNode<NodeData, Real>::CornerIndex(const Point3D<Real> &center, const Point3D<Real> &p)
 {
@@ -1872,8 +1924,13 @@ inline int OctNode<NodeData, Real>::ChildOverlap2(const Point3D<Real> &center1, 
 	}
 	return overlap;
 }
+
 template <class NodeData, class Real>
-OctNode<NodeData, Real> *OctNode<NodeData, Real>::faceNeighbor(const int &faceIndex, const int &forceChildren) { return __faceNeighbor(faceIndex >> 1, faceIndex & 1, forceChildren); }
+OctNode<NodeData, Real> *OctNode<NodeData, Real>::faceNeighbor(const int &faceIndex, const int &forceChildren)
+{
+	return __faceNeighbor(faceIndex >> 1, faceIndex & 1, forceChildren);
+}
+
 template <class NodeData, class Real>
 const OctNode<NodeData, Real> *OctNode<NodeData, Real>::faceNeighbor(const int &faceIndex) const { return __faceNeighbor(faceIndex >> 1, faceIndex & 1); }
 template <class NodeData, class Real>
@@ -1911,6 +1968,7 @@ OctNode<NodeData, Real> *OctNode<NodeData, Real>::__faceNeighbor(const int &dir,
 		return &temp->children[pIndex];
 	}
 }
+
 template <class NodeData, class Real>
 const OctNode<NodeData, Real> *OctNode<NodeData, Real>::__faceNeighbor(const int &dir, const int &off) const
 {
@@ -2041,6 +2099,7 @@ const OctNode<NodeData, Real> *OctNode<NodeData, Real>::__edgeNeighbor(const int
 		return NULL;
 	}
 }
+
 template <class NodeData, class Real>
 OctNode<NodeData, Real> *OctNode<NodeData, Real>::__edgeNeighbor(const int &o, const int i[2], const int idx[2], const int &forceChildren)
 {
@@ -2613,6 +2672,10 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 	return neighbors[node->depth];
 }
 
+
+////////////////////////
+//// Write and Read ////
+////////////////////////
 template <class NodeData, class Real>
 int OctNode<NodeData, Real>::write(const char *fileName) const
 {
@@ -2625,11 +2688,12 @@ int OctNode<NodeData, Real>::write(const char *fileName) const
 	fclose(fp);
 	return ret;
 }
+
 template <class NodeData, class Real>
 int OctNode<NodeData, Real>::write(FILE *fp) const
 {
 	fwrite(this, sizeof(OctNode<NodeData, Real>), 1, fp);
-	if (children)
+	if (children) // 如果有儿子，则把儿子也write下？
 	{
 		for (int i = 0; i < Cube::CORNERS; i++)
 		{
@@ -2638,6 +2702,7 @@ int OctNode<NodeData, Real>::write(FILE *fp) const
 	}
 	return 1;
 }
+
 template <class NodeData, class Real>
 int OctNode<NodeData, Real>::read(const char *fileName)
 {
@@ -2650,6 +2715,7 @@ int OctNode<NodeData, Real>::read(const char *fileName)
 	fclose(fp);
 	return ret;
 }
+
 template <class NodeData, class Real>
 int OctNode<NodeData, Real>::read(FILE *fp)
 {

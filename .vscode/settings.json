@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "atomic": "cpp",
+        "functional": "cpp",
+        "random": "cpp",
+        "cmath": "cpp",
+        "numeric": "cpp"
+    }
+}
