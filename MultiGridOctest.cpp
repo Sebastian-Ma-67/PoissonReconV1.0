@@ -318,7 +318,16 @@ int Execute(int argc, char *argv[])
 	}
 
 	t = Time();
-	tree.setTree(In.value, depth, Binary.set, kernelDepth, Real(samplesPerNode), scaleFactor, center, scale, !NoResetSamples.set);
+	tree.setTree(In.value,
+				 depth,
+				 Binary.set,
+				 kernelDepth,
+				 Real(samplesPerNode),
+				 scaleFactor,
+				 center,
+				 scale,
+				 !NoResetSamples.set);
+				 
 	DumpOutput2(comments[commentNum++], "#             Tree set in: %9.1f (s), %9.1f (MB)\n", Time() - t, tree.maxMemoryUsage);
 	DumpOutput("Leaves/Nodes: %d/%d\n", tree.tree.leaves(), tree.tree.nodes());
 	DumpOutput("   Tree Size: %.3f MB\n", float(sizeof(TreeOctNode) * tree.tree.nodes()) / (1 << 20));

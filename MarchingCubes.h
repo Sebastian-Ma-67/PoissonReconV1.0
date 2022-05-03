@@ -49,7 +49,7 @@ class Cube{
 public:
 	const static int CORNERS=8,EDGES=12,NEIGHBORS=6;
 
-	static int  CornerIndex			(const int& x,const int& y,const int& z);
+	static int  CornerIndex			(const int& x,const int& y,const int& z); // 根据x，y，z的值来确定是第几个corner, 然后输出索引值
 	static void FactorCornerIndex	(const int& idx,int& x,int& y,int& z);
 	static int  EdgeIndex			(const int& orientation,const int& i,const int& j);
 	static void FactorEdgeIndex		(const int& idx,int& orientation,int& i,int &j);

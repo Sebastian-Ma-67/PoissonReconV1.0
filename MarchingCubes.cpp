@@ -126,7 +126,7 @@ int Square::ReflectCornerIndex(const int &idx, const int &edgeIndex)
 //////////
 // Cube //
 //////////
-int Cube::CornerIndex(const int &x, const int &y, const int &z)
+int Cube::CornerIndex(const int &x, const int &y, const int &z) // 
 {
 	return (z << 2) | (y << 1) | x;
 }
@@ -240,7 +240,7 @@ void Cube::FacesAdjacentToEdge(const int &eIndex, int &f1Index, int &f2Index)
 
 	// 根据 eIndex 得到 orientation, i1, i2
 	FactorEdgeIndex(eIndex, orientation, i1, i2);
-	i1 <<= 1; //i1 = i1 << 1, 类似与i += 1
+	i1 <<= 1; // i1 = i1 << 1, 类似与i += 1
 	i2 <<= 1;
 	i1--;
 	i2--;

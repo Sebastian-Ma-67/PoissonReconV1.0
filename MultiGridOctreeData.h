@@ -359,7 +359,7 @@ class Octree
 	static int GetRootIndex(const TreeOctNode *node, const int &localEdgeIndex, const int &maxDepth,
 							hash_map<long long, int> &boundaryRoots, hash_map<long long, int> *interiorRoots, CoredPointIndex &index);
 
-	int NonLinearUpdateWeightContribution(TreeOctNode *node, const Point3D<Real> &position);
+	int NonLinearUpdateWeightContribution(TreeOctNode *node, const Point3D<Real> &position); // 依据当前点(poisition)相对与当前体素中心的距离，来计算当前点(poisition)对当前体素周围相邻体素(如果有的话，没有就算了)的weight贡献
 	Real NonLinearGetSampleWeight(TreeOctNode *node, const Point3D<Real> &position);
 	void NonLinearGetSampleDepthAndWeight(TreeOctNode *node, const Point3D<Real> &position, const Real &samplesPerNode, Real &depth, Real &weight);
 	int NonLinearSplatOrientedPoint(TreeOctNode *node, const Point3D<Real> &point, const Point3D<Real> &normal);
@@ -379,6 +379,8 @@ public:
 	void setFunctionData(const PPolynomial<Degree> &ReconstructionFunction, const int &maxDepth, const int &normalize, const Real &normalSmooth = -1);
 	void finalize1(const int &refineNeighbors = -1);
 	void finalize2(const int &refineNeighbors = -1);
+	
+	// 
 	int setTree(char *fileName, const int &maxDepth, const int &binary, const int &kernelDepth, const Real &samplesPerNode,
 				const Real &scaleFactor, Point3D<Real> &center, Real &scale, const int &resetSampleDepths = 1);
 

@@ -127,8 +127,8 @@ int OctNode<NodeData, Real>::initChildren(void)
 		fprintf(stderr, "Failed to initialize children in OctNode::initChildren\n");
 		exit(0);
 	}
-	int d, off[3];
-	depthAndOffset(d, off);
+	int d, offset[3];
+	depthAndOffset(d, offset); // 首先，咱先计算一下现在这个节点的深度和offset对吧，然后你才能计算它的八个子节点的深度和off
 	for (i = 0; i < 2; i++)
 	{
 		for (j = 0; j < 2; j++)
@@ -136,28 +136,28 @@ int OctNode<NodeData, Real>::initChildren(void)
 			for (k = 0; k < 2; k++)
 			{
 				int idx = Cube::CornerIndex(i, j, k);
-				children[idx].parent = this;
-				children[idx].children = NULL;
+				children[idx].parent = this; // 这个ocNode有8个children，每个children的parent都是 "this" ocNode
+				children[idx].children = NULL; // 每个children的children暂时为NULL
 				int off2[3];
-				off2[0] = (off[0] << 1) + i;
-				off2[1] = (off[1] << 1) + j;
-				off2[2] = (off[2] << 1) + k;
-				Index(d + 1, off2, children[idx].d, children[idx].off);
+				off2[0] = (offset[0] << 1) + i; // offset 是当前节点的偏置，我们根据offset 计算off2，然后把off2带入Index函数去计算每一个子节点专属的off
+				off2[1] = (offset[1] << 1) + j;
+				off2[2] = (offset[2] << 1) + k;
+				Index(d + 1, off2, children[idx].d, children[idx].off); // 计算这个 children[idx] 的 d 和 off，并进行赋值
 			}
 		}
 	}
 	return 1;
 }
 template <class NodeData, class Real>
-inline void OctNode<NodeData, Real>::Index(const int &depth, const int offset[3], short &d, short off[3])
+inline void OctNode<NodeData, Real>::Index(const int &depth, const int off2[3], short &d, short off[3])
 {
 	d = short(depth);
-	off[0] = short((1 << depth) + offset[0] - 1);
-	off[1] = short((1 << depth) + offset[1] - 1);
-	off[2] = short((1 << depth) + offset[2] - 1);
+	off[0] = short((1 << depth) + off2[0] - 1);
+	off[1] = short((1 << depth) + off2[1] - 1);
+	off[2] = short((1 << depth) + off2[2] - 1);
 }
 
-template <class NodeData, class Real>
+template <class NodeData, class Real> // 和centerAndWidth差不多
 inline void OctNode<NodeData, Real>::depthAndOffset(int &depth, int offset[3]) const
 {
 	depth = int(d);
@@ -186,7 +186,7 @@ void OctNode<NodeData, Real>::centerAndWidth(Point3D<Real> &center, Real &width)
 	offset[0] = (int(off[0]) + 1) & (~(1 << depth));
 	offset[1] = (int(off[1]) + 1) & (~(1 << depth));
 	offset[2] = (int(off[2]) + 1) & (~(1 << depth));
-	width = Real(1.0 / (1 << depth)); // 最小体素的width
+	width = Real(1.0 / (1 << depth)); // 当前level的体素的width
 	for (int dim = 0; dim < DIMENSION; dim++)
 	{
 		center.coords[dim] = Real(0.5 + offset[dim]) * width;
@@ -1546,7 +1546,7 @@ int OctNode<NodeData, Real>::CommonEdge(const OctNode<NodeData, Real> *node1, co
 	}
 }
 
-// 获取该角点在当前节点的索引
+// 获取该点p在当前节点中更靠近哪个角点,输出那个角点的索引
 template <class NodeData, class Real>
 int OctNode<NodeData, Real>::CornerIndex(const Point3D<Real> &center, const Point3D<Real> &p)
 {
@@ -2434,13 +2434,13 @@ template <class NodeData, class Real>
 typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKey::setNeighbors(OctNode<NodeData, Real> *node)
 {
 	int d = node->depth();
-	if (node != neighbors[d].neighbors[1][1][1])
+	if (node != neighbors[d].neighbors[1][1][1]) // 如果不是自己的话（[1][1][1]代表自己）
 	{
 		neighbors[d].clear();
 
-		if (!node->parent)
+		if (!node->parent) // 
 		{
-			neighbors[d].neighbors[1][1][1] = node;
+			neighbors[d].neighbors[1][1][1] = node; // 如果该节点没有父节点的话，则将该节点放在中心位置，即[1][1][1]
 		}
 		else
 		{
@@ -2448,7 +2448,7 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 			int idx = int(node - node->parent->children);
 			Cube::FactorCornerIndex(idx, x1, y1, z1);
 			Cube::FactorCornerIndex((~idx) & 7, x2, y2, z2);
-			for (i = 0; i < 2; i++)
+			for (i = 0; i < 2; i++) // 为什么只有0, 1呢？ 那是因为我们构建的是8叉树，2x2x2=8
 			{
 				for (j = 0; j < 2; j++)
 				{
@@ -2458,7 +2458,7 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 					}
 				}
 			}
-			Neighbors &temp = setNeighbors(node->parent);
+			Neighbors &temp = setNeighbors(node->parent); // 这里主要是将temp重新指向parent;因为在前面，我们将parent指向了children
 
 			// Set the neighbors from across the faces
 			i = x1 << 1;
@@ -2671,7 +2671,6 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 	}
 	return neighbors[node->depth];
 }
-
 
 ////////////////////////
 //// Write and Read ////

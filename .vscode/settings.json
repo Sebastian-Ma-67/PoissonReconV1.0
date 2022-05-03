@@ -4,6 +4,9 @@
         "functional": "cpp",
         "random": "cpp",
         "cmath": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "bitset": "cpp",
+        "ostream": "cpp",
+        "tuple": "cpp"
     }
 }

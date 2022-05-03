@@ -125,23 +125,23 @@ public:
 	static int UseAllocator(void);
 	static void SetAllocator(int blockSize);
 
-	OctNode *parent;
-	OctNode *children;
-	short d, off[3];
+	OctNode *parent; // 该节点的父节点
+	OctNode *children; // 该节点的子节点
+	short d, off[3]; // d 就是深度; off是用来计算offset的，而offset表示在当前level，当前体素的中心点相对于坐标值最小的体素的中心点，往正方向偏移了几个身位, 详见centerAndWidth
 	NodeData nodeData;
-
+// 续：其实，off和offset紧密联系，可查看本页最后一行代码
 	OctNode(void);
 	~OctNode(void);
 	int initChildren(void);
 
-	void depthAndOffset(int &depth, int offset[3]) const;
-	int depth(void) const;
+	void depthAndOffset(int &depth, int offset[3]) const; // 计算当前节点的depth和offset, 和centerAndWidth差不多
+	int depth(void) const; // 获取当前节点Node的深度depth
 	static inline void DepthAndOffset(const long long &index, int &depth, int offset[3]);
-	static inline void CenterAndWidth(const long long &index, Point3D<Real> &center, Real &width);
+	static inline void CenterAndWidth(const long long &index, Point3D<Real> &center, Real &width); // 这玩意儿是带OffsetMask的版本，有点高级
 
 	static inline int Depth(const long long &index);
 	static inline void Index(const int &depth, const int offset[3], short &d, short off[3]);
-	void centerAndWidth(Point3D<Real> &center, Real &width) const;
+	void centerAndWidth(Point3D<Real> &center, Real &width) const; // 计算该节点的中心点坐标和节点所对应体素的宽度, 不带OffsetMask的版本的
 
 	int leaves(void) const;
 	int maxDepthLeaves(const int &maxDepth) const;
@@ -249,22 +249,22 @@ public:
 												 const int &processCurrent = 1);
 
 	template <class NodeAdjacencyFunction>
-	static void ProcessMaxDepthNodeAdjacentNodes(const Real &dx, const Real &dy, const Real &dz, 
-	OctNode *node1, const Real &radius1, 
-	OctNode *node2, const Real &radius2, const Real &width2, 
-	const int &depth, 
-	NodeAdjacencyFunction *F, 
-	const int &processCurrent = 1);
+	static void ProcessMaxDepthNodeAdjacentNodes(const Real &dx, const Real &dy, const Real &dz,
+												 OctNode *node1, const Real &radius1,
+												 OctNode *node2, const Real &radius2, const Real &width2,
+												 const int &depth,
+												 NodeAdjacencyFunction *F,
+												 const int &processCurrent = 1);
 
 	// 获取该角点在当前节点的索引
 	static int CornerIndex(const Point3D<Real> &center, const Point3D<Real> &p);
 
 	OctNode *faceNeighbor(const int &faceIndex, const int &forceChildren = 0);
 	const OctNode *faceNeighbor(const int &faceIndex) const;
-	
+
 	OctNode *edgeNeighbor(const int &edgeIndex, const int &forceChildren = 0);
 	const OctNode *edgeNeighbor(const int &edgeIndex) const;
-	
+
 	OctNode *cornerNeighbor(const int &cornerIndex, const int &forceChildren = 0);
 	const OctNode *cornerNeighbor(const int &cornerIndex) const;
 
@@ -272,10 +272,10 @@ public:
 	const OctNode *getNearestLeaf(const Point3D<Real> &p) const;
 
 	static int CommonEdge(const OctNode *node1, const int &eIndex1, const OctNode *node2, const int &eIndex2);
-	
+
 	static int CompareForwardDepths(const void *v1, const void *v2);
 	static int CompareForwardPointerDepths(const void *v1, const void *v2);
-	
+
 	static int CompareBackwardDepths(const void *v1, const void *v2);
 	static int CompareBackwardPointerDepths(const void *v1, const void *v2);
 
@@ -292,7 +292,7 @@ public:
 		Neighbors(void);
 		void clear(void);
 	};
-	
+
 	class NeighborKey
 	{
 		Neighbors *neighbors;
@@ -302,7 +302,7 @@ public:
 		~NeighborKey(void);
 
 		void set(const int &depth);
-		Neighbors &setNeighbors(OctNode *node);
+		Neighbors &setNeighbors(OctNode *node); // 设置节点的相邻节点，这样就知道该节点有哪些相邻节点了
 		Neighbors &getNeighbors(OctNode *node);
 	};
 
@@ -315,3 +315,28 @@ public:
 #include "Octree.inl"
 
 #endif // OCT_NODE_INCLUDED
+
+/*
+对于depth = 0(整个点云只有一个节点，没有子节点):
+off=0 : offset = 0, 表示右移 1 位；
+
+对于depth = 1(整个点云有一个父节点和四个子节点)
+off= 1 : offset = 0, 表示右移 1 位；
+off= 2 : offset = 1, 表示右移 0 位；
+
+对于depth = 2:
+off= 0 : offset = 1, 表示右移 1 位；
+off= 1 : offset = 2, 表示右移 2 位；
+off= 2 : offset = 3, 表示右移 3 位；
+off= 3 : offset = 0, 表示右移 0 位；
+
+对于depth = 3:
+off= 0 : offset = 1, 表示右移 1 位；
+off= 1 : offset = 2, 表示右移 2 位；
+off= 2 : offset = 3, 表示右移 3 位；
+off= 3 : offset = 4, 表示右移 4 位；
+off= 4 : offset = 5, 表示右移 5 位；
+off= 5 : offset = 6, 表示右移 6 位；
+off= 6 : offset = 7, 表示右移 7 位；
+off= 7 : offset = 0, 表示右移 0 位；
+*/

@@ -500,37 +500,37 @@ Real Octree<Degree>::NonLinearGetSampleWeight(TreeOctNode *node, const Point3D<R
 	}
 	return Real(1.0 / weight);
 }
-template <int Degree>
+template <int Degree> // 依据当前点(poisition)相对与当前体素中心的距离，来计算当前点(poisition)对当前体素周围相邻体素(如果有的话，没有就算了)的weight贡献
 int Octree<Degree>::NonLinearUpdateWeightContribution(TreeOctNode *node, const Point3D<Real> &position)
 {
 	int i, j, k;
-	TreeOctNode::Neighbors &neighbors = neighborKey.setNeighbors(node);
+	TreeOctNode::Neighbors &neighbors = neighborKey.setNeighbors(node); // 有点类似于计算该节点的neighbors
 	double x, dxdy, dx[DIMENSION][3];
 	double width;
 	Point3D<Real> center;
 	Real w;
-	node->centerAndWidth(center, w);
+	node->centerAndWidth(center, w); // 计算当前节点所对应体素的中心坐标，以及该体素的width
 	width = w;
 
-	for (i = 0; i < DIMENSION; i++)
+	for (i = 0; i < DIMENSION; i++) // 根据一种奇怪的方式计算"dx"矩阵（3x3）
 	{
 		x = (center.coords[i] - position.coords[i] - width) / width;
-		dx[i][0] = 1.125 + 1.500 * x + 0.500 * x * x;
-		x = (center.coords[i] - position.coords[i]) / width;
-		dx[i][1] = 0.750 - x * x;
-		dx[i][2] = 1.0 - dx[i][1] - dx[i][0];
+		dx[i][0] = 1.125 + 1.500 * x + 0.500 * x * x; // 看本页代码最后面有详细介绍
+		x = (center.coords[i] - position.coords[i]) / width; 
+		dx[i][1] = 0.750 - x * x; // 看本页代码最后面有详细介绍
+		dx[i][2] = 1.0 - dx[i][1] - dx[i][0]; // 看本页代码最后面有详细介绍
 	}
-
-	for (i = 0; i < 3; i++)
+	// 为什么划分为27份呢，是因为每个体素是一个正方体，一般情况下，它周围会有26个跟它一样的正方体，所以这么划分
+	for (i = 0; i < 3; i++) // 然后根据dx矩阵的值，再计算每个neighbor的contribution
 	{
 		for (j = 0; j < 3; j++)
 		{
 			dxdy = dx[0][i] * dx[1][j];
 			for (k = 0; k < 3; k++)
 			{
-				if (neighbors.neighbors[i][j][k])
-				{
-					neighbors.neighbors[i][j][k]->nodeData.centerWeightContribution += Real(dxdy * dx[2][k]);
+				if (neighbors.neighbors[i][j][k]) // 如果这些位置有neighbor的话
+				{ // 总而言之，该体素内的实际point离该体素的哪个相邻体素越近，则该point对那个neighbor的centerWeightContribution就越大，举例来讲，如果我这个点在当前体素的左前下位置，那么该点对我这个体素的左前下的相邻体素的贡献值就比较大
+					neighbors.neighbors[i][j][k]->nodeData.centerWeightContribution += Real(dxdy * dx[2][k]); // 注意这里是累积
 				}
 			}
 		}
@@ -539,16 +539,22 @@ int Octree<Degree>::NonLinearUpdateWeightContribution(TreeOctNode *node, const P
 }
 
 template <int Degree>
-int Octree<Degree>::setTree(char *fileName, const int &maxDepth, const int &binary,
+int Octree<Degree>::setTree(char *fileName,
+							const int &maxDepth,
+							const int &binary,
 							const int &kernelDepth,
-							const Real &samplesPerNode, const Real &scaleFactor, Point3D<Real> &center, Real &scale, const int &resetSamples)
+							const Real &samplesPerNode,
+							const Real &scaleFactor,
+							Point3D<Real> &center,
+							Real &scale, // x，y，z三个轴上的最大跨度值
+							const int &resetSamples)
 {
 
 	FILE *fp;
 	Point3D<Real> min, max, position, normal, myCenter;
 	Real myWidth;
 	int i, cnt = 0;
-	float c[2 * DIMENSION];
+	float c[2 * DIMENSION]; // currenrt point , it has 6 value
 	TreeOctNode *temp;
 	int splatDepth = 0;
 
@@ -590,7 +596,7 @@ int Octree<Degree>::setTree(char *fileName, const int &maxDepth, const int &bina
 				break;
 			}
 		}
-		for (i = 0; i < DIMENSION; i++)
+		for (i = 0; i < DIMENSION; i++) // 对每个点都遍历它的x，y，z坐标，然后和min与max的x，y，z坐标进行比较，把所有点都过一遍之后，就能得到整个点云的边界了
 		{
 			if (!cnt || c[i] < min.coords[i])
 			{
@@ -601,9 +607,11 @@ int Octree<Degree>::setTree(char *fileName, const int &maxDepth, const int &bina
 				max.coords[i] = c[i];
 			}
 		}
-		cnt++;
+		cnt++; // 点云中点的个数
 	}
-	for (i = 0; i < DIMENSION; i++)
+	DumpOutput("Samples: %d\n", cnt);
+
+	for (i = 0; i < DIMENSION; i++) // 计算整个范围的中心点坐标，存储在center里面
 	{
 		if (!i || scale < max.coords[i] - min.coords[i])
 		{
@@ -611,17 +619,16 @@ int Octree<Degree>::setTree(char *fileName, const int &maxDepth, const int &bina
 		}
 		center.coords[i] = Real(max.coords[i] + min.coords[i]) / 2;
 	}
-	DumpOutput("Samples: %d\n", cnt);
-	scale *= scaleFactor;
+	scale *= scaleFactor; // 在原有的基础上将scale放大scaleFactor倍，默认是放大1.25倍
 	for (i = 0; i < DIMENSION; i++)
 	{
-		center.coords[i] -= scale / 2;
+		center.coords[i] -= scale / 2; // 看样子是要把中心xyz坐标都往负方向移动0.5个scale, 
 	}
 	if (splatDepth > 0)
 	{
 		DumpOutput("Setting sample weights\n");
-		fseek(fp, SEEK_SET, 0);
-		cnt = 0;
+		fseek(fp, SEEK_SET, 0); // 从文件开头位置再读取一遍
+		cnt = 0; // 将cnt重置为 0
 		while (1)
 		{
 			if (binary)
@@ -640,11 +647,11 @@ int Octree<Degree>::setTree(char *fileName, const int &maxDepth, const int &bina
 			}
 			for (i = 0; i < DIMENSION; i++)
 			{
-				position.coords[i] = (c[i] - center.coords[i]) / scale;
+				position.coords[i] = (c[i] - center.coords[i]) / scale; // 将所有点的坐标归一化到（0, 1）区间内
 			}
-			myCenter.coords[0] = myCenter.coords[1] = myCenter.coords[2] = Real(0.5);
-			myWidth = Real(1.0);
-			for (i = 0; i < DIMENSION; i++)
+			myCenter.coords[0] = myCenter.coords[1] = myCenter.coords[2] = Real(0.5); // 强制将中心点坐标设置为(0.5, 0.5, 0.5)
+			myWidth = Real(1.0); // 将myWidth强制设置为1.0, 归一化了嘛
+			for (i = 0; i < DIMENSION; i++) // 检查一下有没有漏网之鱼，也就是不在（0, 1）区间之内的
 			{
 				if (position.coords[i] < myCenter.coords[i] - myWidth / 2 || position.coords[i] > myCenter.coords[i] + myWidth / 2)
 				{
@@ -655,18 +662,18 @@ int Octree<Degree>::setTree(char *fileName, const int &maxDepth, const int &bina
 			{
 				continue;
 			}
-			temp = &tree;
-			int d = 0;
+			temp = &tree; // 这里，我们把整棵树的地址交给 temp
+			int d = 0; // 这时候深度还是0
 			while (d < splatDepth)
 			{
-				NonLinearUpdateWeightContribution(temp, position);
-				if (!temp->children)
+				NonLinearUpdateWeightContribution(temp, position); // 将树和当前要处理的点的坐标传进去，进行非线性更新权重分布
+				if (!temp->children) // 判断是否有children，如果没有的话，咱就给它init一个
 				{
 					temp->initChildren();
 				}
 				int cIndex = TreeOctNode::CornerIndex(myCenter, position);
-				temp = &temp->children[cIndex];
-				myWidth /= 2;
+				temp = &temp->children[cIndex]; // 将子节点的地址赋值给temp，此时temp已经是子节点了
+				myWidth /= 2; // 与此同时，将myWidth除以2, 接下来根据索引调整myCenter的坐标值
 				if (cIndex & 1)
 				{
 					myCenter.coords[0] += myWidth / 2;
@@ -3730,3 +3737,12 @@ long long VertexData::EdgeIndex(const TreeOctNode *node, const int &eIndex, cons
 	};
 	return (long long)(idx[0]) | (long long)(idx[1]) << 15 | (long long)(idx[2]) << 30;
 }
+
+/*
+1. 单调递减，且先快后慢；当position.coords[i]的值处于最小位置时，dx[i][0]的值最大，为0.5;
+当position.coords[i]的值处于最大位置时，dx[i][0]的值最小，为0；
+2. 典型的上凸曲线，当position.coords[i]的值处于最小位置和最大位置时，dx[i][1]的值最小，为0.5；
+当position.coords[i]的值位于当前体素的中心时，dx[i][1]的值最大，为0.75；
+3. 单调递增曲线，看样子和dx[i][0]有点左右对称，当position.coords[i]的值处于最小位置时，dx[i][0]的值最小，为0; 
+当position.coords[i]的值处于最大位置时，dx[i][0]的值最大，为0.5；
+*/

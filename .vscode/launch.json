@@ -8,11 +8,11 @@
             // Resolved by CMake Tools:
             "program": "${workspaceFolder}/Bin/Linux/PoissonRecon",
             "args": ["--in",
-                 "${workspaceFolder}/Bin/Linux/bunny.bnpts", 
+                 "${workspaceFolder}/Bin/Linux/bunny_Cloud.pn", 
                  "--out", 
                  "${workspaceFolder}/Bin/Linux/bunny.ply", 
                  "--depth",
-                 "10",
+                 "3",
                  "--binary",
                  "--solverDivide", 
                  "8",
