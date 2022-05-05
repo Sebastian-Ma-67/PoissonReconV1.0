@@ -326,7 +326,7 @@ int Execute(int argc, char *argv[])
 				 scaleFactor,
 				 center,
 				 scale,
-				 !NoResetSamples.set);
+				 !NoResetSamples.set); // datou
 
 	DumpOutput2(comments[commentNum++], "#             Tree set in: %9.1f (s), %9.1f (MB)\n", Time() - t, tree.maxMemoryUsage);
 	DumpOutput("Leaves/Nodes: %d/%d\n", tree.m_TreeOctNode.leaves(), tree.m_TreeOctNode.nodes());
