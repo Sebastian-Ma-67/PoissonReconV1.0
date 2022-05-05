@@ -260,8 +260,8 @@ void Octree<Degree>::setNodeIndices(TreeOctNode &node, int &idx)
 		}
 	}
 }
-template <int Degree>
-int Octree<Degree>::NonLinearSplatOrientedPoint(TreeOctNode *node, const Point3D<Real> &position, const Point3D<Real> &normal)
+template <int Degree> // 非线性splat（喷溅）有向点
+int Octree<Degree>::NonLinearSplatOrientedPoint(TreeOctNode *node, const Point3D<Real> &position, const Point3D<Real> &exNormal)
 {
 	double x, dxdy, dxdydz, dx[DIMENSION][3];
 	int i, j, k;
@@ -293,21 +293,21 @@ int Octree<Degree>::NonLinearSplatOrientedPoint(TreeOctNode *node, const Point3D
 					int idx = neighbors.neighborsOctNode[i][j][k]->nodeData.nodeIndex;
 					if (idx < 0)
 					{
-						Point3D<Real> n;
-						n.coords[0] = n.coords[1] = n.coords[2] = 0;
-						idx = neighbors.neighborsOctNode[i][j][k]->nodeData.nodeIndex = int(normals->size());
-						normals->push_back(n);
+						Point3D<Real> myNormal;
+						myNormal.coords[0] = myNormal.coords[1] = myNormal.coords[2] = 0;
+						idx = neighbors.neighborsOctNode[i][j][k]->nodeData.nodeIndex = int(pvNormals->size());
+						pvNormals->push_back(myNormal);
 					}
-					(*normals)[idx].coords[0] += Real(normal.coords[0] * dxdydz);
-					(*normals)[idx].coords[1] += Real(normal.coords[1] * dxdydz);
-					(*normals)[idx].coords[2] += Real(normal.coords[2] * dxdydz);
+					(*pvNormals)[idx].coords[0] += Real(exNormal.coords[0] * dxdydz);
+					(*pvNormals)[idx].coords[1] += Real(exNormal.coords[1] * dxdydz);
+					(*pvNormals)[idx].coords[2] += Real(exNormal.coords[2] * dxdydz);
 				}
 			}
 		}
 	}
 	return 0;
 }
-template <int Degree>
+template <int Degree> // 非线性splat（喷溅）有向点
 void Octree<Degree>::NonLinearSplatOrientedPoint(const Point3D<Real> &position, const Point3D<Real> &normal, const int &splatDepth, const Real &samplesPerNode,
 												 const int &minDepth, const int &maxDepth)
 {
@@ -315,11 +315,11 @@ void Octree<Degree>::NonLinearSplatOrientedPoint(const Point3D<Real> &position, 
 	Point3D<Real> n;
 	TreeOctNode *tempTreeOctNode;
 	int i;
-	double width;
+	double myWidth_d;
 	Point3D<Real> myCenter;
-	Real myWidth;
+	Real myWidth_f;
 	myCenter.coords[0] = myCenter.coords[1] = myCenter.coords[2] = Real(0.5);
-	myWidth = Real(1.0);
+	myWidth_f = Real(1.0);
 
 	tempTreeOctNode = &m_TreeOctNode;
 	while (tempTreeOctNode->depth() < splatDepth)
@@ -331,30 +331,30 @@ void Octree<Degree>::NonLinearSplatOrientedPoint(const Point3D<Real> &position, 
 		}
 		int cIndex = TreeOctNode::CornerIndex(myCenter, position);
 		tempTreeOctNode = &tempTreeOctNode->children[cIndex];
-		myWidth /= 2;
+		myWidth_f /= 2;
 		if (cIndex & 1)
 		{
-			myCenter.coords[0] += myWidth / 2;
+			myCenter.coords[0] += myWidth_f / 2;
 		}
 		else
 		{
-			myCenter.coords[0] -= myWidth / 2;
+			myCenter.coords[0] -= myWidth_f / 2;
 		}
 		if (cIndex & 2)
 		{
-			myCenter.coords[1] += myWidth / 2;
+			myCenter.coords[1] += myWidth_f / 2;
 		}
 		else
 		{
-			myCenter.coords[1] -= myWidth / 2;
+			myCenter.coords[1] -= myWidth_f / 2;
 		}
 		if (cIndex & 4)
 		{
-			myCenter.coords[2] += myWidth / 2;
+			myCenter.coords[2] += myWidth_f / 2;
 		}
 		else
 		{
-			myCenter.coords[2] -= myWidth / 2;
+			myCenter.coords[2] -= myWidth_f / 2;
 		}
 	}
 	Real alpha, newDepth;
@@ -393,59 +393,59 @@ void Octree<Degree>::NonLinearSplatOrientedPoint(const Point3D<Real> &position, 
 		}
 		int cIndex = TreeOctNode::CornerIndex(myCenter, position);
 		tempTreeOctNode = &tempTreeOctNode->children[cIndex]; // 将该TreeOctNode的第cIndex个children
-		myWidth /= 2;
+		myWidth_f /= 2;
 		if (cIndex & 1)
 		{
-			myCenter.coords[0] += myWidth / 2;
+			myCenter.coords[0] += myWidth_f / 2;
 		}
 		else
 		{
-			myCenter.coords[0] -= myWidth / 2;
+			myCenter.coords[0] -= myWidth_f / 2;
 		}
 		if (cIndex & 2)
 		{
-			myCenter.coords[1] += myWidth / 2;
+			myCenter.coords[1] += myWidth_f / 2;
 		}
 		else
 		{
-			myCenter.coords[1] -= myWidth / 2;
+			myCenter.coords[1] -= myWidth_f / 2;
 		}
 		if (cIndex & 4)
 		{
-			myCenter.coords[2] += myWidth / 2;
+			myCenter.coords[2] += myWidth_f / 2;
 		}
 		else
 		{
-			myCenter.coords[2] -= myWidth / 2;
+			myCenter.coords[2] -= myWidth_f / 2;
 		}
 	}
-	width = 1.0 / (1 << tempTreeOctNode->depth());
+	myWidth_d = 1.0 / (1 << tempTreeOctNode->depth());
 	for (i = 0; i < DIMENSION; i++)
 	{
-		n.coords[i] = normal.coords[i] * alpha / Real(pow(width, 3)) * Real(dx);
+		n.coords[i] = normal.coords[i] * alpha / Real(pow(myWidth_d, 3)) * Real(dx);
 	}
 	NonLinearSplatOrientedPoint(tempTreeOctNode, position, n);
 	if (fabs(1.0 - dx) > EPSILON)
 	{
 		dx = Real(1.0 - dx);
 		tempTreeOctNode = tempTreeOctNode->parent;
-		width = 1.0 / (1 << tempTreeOctNode->depth());
+		myWidth_d = 1.0 / (1 << tempTreeOctNode->depth());
 
 		for (i = 0; i < DIMENSION; i++)
 		{
-			n.coords[i] = normal.coords[i] * alpha / Real(pow(width, 3)) * Real(dx);
+			n.coords[i] = normal.coords[i] * alpha / Real(pow(myWidth_d, 3)) * Real(dx);
 		}
 		NonLinearSplatOrientedPoint(tempTreeOctNode, position, n);
 	}
 }
-template <int Degree>
+template <int Degree> // 非线性获取采样深度和权重
 void Octree<Degree>::NonLinearGetSampleDepthAndWeight(TreeOctNode *node, const Point3D<Real> &position, const Real &samplesPerNode, Real &depth, Real &weight)
 {
 	TreeOctNode *temp = node;
-	weight = Real(1.0) / NonLinearGetSampleWeight(temp, position);
+	weight = Real(1.0) / NonLinearGetSampleWeight(temp, position); // 因为这个函数在里面进行了取倒数计算，所以我们在这里要把它倒回来
 	if (weight >= samplesPerNode + 1)
 	{
-		depth = Real(temp->depth() + log(weight / (samplesPerNode + 1)) / log(double(1 << (DIMENSION - 1))));
+		depth = Real(temp->depth() + log(weight / (samplesPerNode + 1)) / log(double(1 << (DIMENSION - 1)))); // 为啥子这样计算depth嘛？
 	}
 	else
 	{
@@ -459,10 +459,10 @@ void Octree<Degree>::NonLinearGetSampleDepthAndWeight(TreeOctNode *node, const P
 		}
 		depth = Real(temp->depth() + log(newAlpha / (samplesPerNode + 1)) / log(newAlpha / oldAlpha));
 	}
-	weight = Real(pow(double(1 << (DIMENSION - 1)), -double(depth)));
+	weight = Real(pow(double(1 << (DIMENSION - 1)), -double(depth))); // 看样子，这个depth的值越大，也就是越深，那么weight就越小喽
 }
 
-template <int Degree>
+template <int Degree> // 非线性获取采样权重; 有点类似非线性权重更新，只不过这次是用contribution来计算weight
 Real Octree<Degree>::NonLinearGetSampleWeight(TreeOctNode *node, const Point3D<Real> &position)
 {
 	Real weight = 0;
@@ -498,7 +498,7 @@ Real Octree<Degree>::NonLinearGetSampleWeight(TreeOctNode *node, const Point3D<R
 			}
 		}
 	}
-	return Real(1.0 / weight);
+	return Real(1.0 / weight); // 注意，这里要对weight取倒数
 }
 template <int Degree> // 依据当前点(poisition)相对与当前体素中心的距离，来计算当前点(poisition)对当前体素周围相邻体素(如果有的话，没有就算了)的weight贡献
 int Octree<Degree>::NonLinearUpdateWeightContribution(TreeOctNode *node, const Point3D<Real> &position)
@@ -706,7 +706,7 @@ int Octree<Degree>::setTree(char *fileName, // 文件名称
 	}
 
 	DumpOutput("Adding Points and Normals\n");
-	normals = new std::vector<Point3D<Real>>();
+	pvNormals = new std::vector<Point3D<Real>>();
 	fseek(fp, SEEK_SET, 0);
 	cnt = 0;
 	while (1)
@@ -743,7 +743,7 @@ int Octree<Degree>::setTree(char *fileName, // 文件名称
 		{
 			continue;
 		}
-#if FORCE_UNIT_NORMALS
+#if FORCE_UNIT_NORMALS // 这个归一化是怎么定义的呢？我看好像也不是说平方和为1或者其他的，值都挺大的
 		Real myLength = Real(Length(normal));
 		if (myLength > EPSILON)
 		{
@@ -874,7 +874,7 @@ void Octree<Degree>::finalize1(const int &refineNeighbors)
 		temp = m_TreeOctNode.nextNode();
 		while (temp)
 		{
-			if (temp->nodeData.nodeIndex >= 0 && Length((*normals)[temp->nodeData.nodeIndex]) > EPSILON)
+			if (temp->nodeData.nodeIndex >= 0 && Length((*pvNormals)[temp->nodeData.nodeIndex]) > EPSILON)
 			{
 				rf.depth = temp->depth() - refineNeighbors;
 				TreeOctNode::ProcessMaxDepthNodeAdjacentNodes(temp, 2 * radius, &m_TreeOctNode, Real(0.5), temp->depth() - refineNeighbors, &rf);
@@ -1428,7 +1428,7 @@ template <int Degree>
 int Octree<Degree>::HasNormals(TreeOctNode *node, const Real &epsilon)
 {
 	int hasNormals = 0;
-	if (node->nodeData.nodeIndex >= 0 && Length((*normals)[node->nodeData.nodeIndex]) > epsilon)
+	if (node->nodeData.nodeIndex >= 0 && Length((*pvNormals)[node->nodeData.nodeIndex]) > epsilon)
 	{
 		hasNormals = 1;
 	}
@@ -1476,12 +1476,12 @@ void Octree<Degree>::SetLaplacianWeights(void)
 	temp = m_TreeOctNode.nextNode();
 	while (temp)
 	{
-		if (temp->nodeData.nodeIndex < 0 || Length((*normals)[temp->nodeData.nodeIndex]) <= EPSILON)
+		if (temp->nodeData.nodeIndex < 0 || Length((*pvNormals)[temp->nodeData.nodeIndex]) <= EPSILON)
 		{
 			temp = m_TreeOctNode.nextNode(temp);
 			continue;
 		}
-		df.normal = (*normals)[temp->nodeData.nodeIndex];
+		df.normal = (*pvNormals)[temp->nodeData.nodeIndex];
 		df.index[0] = int(temp->off[0]) * fData.res;
 		df.index[1] = int(temp->off[1]) * fData.res;
 		df.index[2] = int(temp->off[2]) * fData.res;
@@ -1498,14 +1498,14 @@ void Octree<Degree>::SetLaplacianWeights(void)
 		}
 		else
 		{
-			temp->nodeData.centerWeightContribution = Real(Length((*normals)[temp->nodeData.nodeIndex]));
+			temp->nodeData.centerWeightContribution = Real(Length((*pvNormals)[temp->nodeData.nodeIndex]));
 		}
 		temp = m_TreeOctNode.nextNode(temp);
 	}
 	MemoryUsage();
 
-	delete normals;
-	normals = NULL;
+	delete pvNormals;
+	pvNormals = NULL;
 }
 template <int Degree>
 void Octree<Degree>::DivergenceFunction::Function(TreeOctNode *node1, const TreeOctNode *)

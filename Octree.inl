@@ -2430,7 +2430,7 @@ void OctNode<NodeData, Real>::NeighborKey::set(const int &d)
 	}
 	neighbors = new Neighbors[d + 1];
 }
-template <class NodeData, class Real>
+template <class NodeData, class Real> // 设置或者说是计算该节点的相邻节点
 typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKey::setNeighbors(OctNode<NodeData, Real> *node)
 {
 	int d = node->depth();
@@ -2448,7 +2448,7 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 			int idx = int(node - node->parent->children); // 该子node是该父node的第idx个子node
 			Cube::FactorCornerIndex(idx, x1, y1, z1);
 			Cube::FactorCornerIndex((~idx) & 7, x2, y2, z2);
-			for (i = 0; i < 2; i++) // 为什么只有0, 1呢, 那是因为我们构建的是8叉树，2x2x2=8
+			for (i = 0; i < 2; i++) // 为什么只有0, 1呢, 那是因为我们构建的是8叉树，2x2x2=8; 先在该节点所在的父节点对应的体素中寻找它的邻点
 			{
 				for (j = 0; j < 2; j++)
 				{
@@ -2460,7 +2460,7 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 			}
 			Neighbors &tempNeighbors = setNeighbors(node->parent); // 这里主要是将temp重新指向parent;因为在前面，我们将parent指向了children
 
-			// Set the neighbors from across the faces
+			// Set the neighbors from across the faces; 然后再看看跟它面面接触的邻点有没有
 			i = x1 << 1;
 			if (tempNeighbors.neighborsOctNode[i][1][1])
 			{
@@ -2507,7 +2507,7 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 				}
 			}
 
-			// Set the neighbors from across the edges
+			// Set the neighbors from across the edges; 然后再看看跟它通过棱边接触的非父节点体素内的有没有邻点
 			i = x1 << 1;
 			j = y1 << 1;
 			if (tempNeighbors.neighborsOctNode[i][j][1])
@@ -2548,7 +2548,7 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 				}
 			}
 
-			// Set the neighbor from across the corner
+			// Set the neighbor from across the corner; 再看看与它通过点接触的非父节点体素内的有没有邻点
 			i = x1 << 1;
 			j = y1 << 1;
 			k = z1 << 1;

@@ -370,7 +370,7 @@ class Octree
 public:
 	static double maxMemoryUsage;
 	static double MemoryUsage(void);
-	std::vector<Point3D<Real>> *normals;
+	std::vector<Point3D<Real>> *pvNormals;
 	Real postNormalSmooth;
 	TreeOctNode m_TreeOctNode;
 	FunctionData<Degree, double> fData;
