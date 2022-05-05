@@ -288,7 +288,7 @@ public:
 	class Neighbors
 	{
 	public:
-		OctNode *neighbors[3][3][3];
+		OctNode *neighborsOctNode[3][3][3];
 		Neighbors(void);
 		void clear(void);
 	};
@@ -302,7 +302,7 @@ public:
 		~NeighborKey(void);
 
 		void set(const int &depth);
-		Neighbors &setNeighbors(OctNode *node); // 设置节点的相邻节点，这样就知道该节点有哪些相邻节点了
+		Neighbors &setNeighbors(OctNode *node); // 设置节点的相邻节点，这样就知道该节点有哪些相邻节点了; 这个输入的node和this node 是不一样的
 		Neighbors &getNeighbors(OctNode *node);
 	};
 
@@ -321,22 +321,22 @@ public:
 off=0 : offset = 0, 表示右移 1 位；
 
 对于depth = 1(整个点云有一个父节点和四个子节点)
-off= 1 : offset = 0, 表示右移 1 位；
+off= 1 : offset = 0, 表示右移 0 位；
 off= 2 : offset = 1, 表示右移 0 位；
 
 对于depth = 2:
-off= 0 : offset = 1, 表示右移 1 位；
-off= 1 : offset = 2, 表示右移 2 位；
-off= 2 : offset = 3, 表示右移 3 位；
-off= 3 : offset = 0, 表示右移 0 位；
+off= 1 : offset = 0, 表示右移 0 位；
+off= 2 : offset = 1, 表示右移 1 位；
+off= 3 : offset = 2, 表示右移 2 位；
+off= 4 : offset = 3, 表示右移 3 位；
 
 对于depth = 3:
-off= 0 : offset = 1, 表示右移 1 位；
-off= 1 : offset = 2, 表示右移 2 位；
-off= 2 : offset = 3, 表示右移 3 位；
-off= 3 : offset = 4, 表示右移 4 位；
-off= 4 : offset = 5, 表示右移 5 位；
-off= 5 : offset = 6, 表示右移 6 位；
-off= 6 : offset = 7, 表示右移 7 位；
-off= 7 : offset = 0, 表示右移 0 位；
+off= 1 : offset = 0, 表示右移 0 位；
+off= 2 : offset = 2, 表示右移 1 位；
+off= 3 : offset = 3, 表示右移 2 位；
+off= 4 : offset = 3, 表示右移 3 位；
+off= 5 : offset = 4, 表示右移 4 位；
+off= 6 : offset = 5, 表示右移 5 位；
+off= 7 : offset = 6, 表示右移 6 位；
+off= 8 : offset = 7, 表示右移 7 位；
 */

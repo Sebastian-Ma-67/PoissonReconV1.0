@@ -71,14 +71,14 @@ class VertexData
 public:
 	static long long EdgeIndex(const TreeOctNode *node, const int &eIndex, const int &maxDepth, int index[DIMENSION]);
 	static long long EdgeIndex(const TreeOctNode *node, const int &eIndex, const int &maxDepth);
-	
+
 	static long long FaceIndex(const TreeOctNode *node, const int &fIndex, const int &maxDepth, int index[DIMENSION]);
 	static long long FaceIndex(const TreeOctNode *node, const int &fIndex, const int &maxDepth);
-	
+
 	static long long CornerIndex(const int &depth, const int offSet[DIMENSION], const int &cIndex, const int &maxDepth, int index[DIMENSION]);
 	static long long CornerIndex(const TreeOctNode *node, const int &cIndex, const int &maxDepth, int index[DIMENSION]);
 	static long long CornerIndex(const TreeOctNode *node, const int &cIndex, const int &maxDepth);
-	
+
 	static long long CenterIndex(const int &depth, const int offSet[DIMENSION], const int &maxDepth, int index[DIMENSION]);
 	static long long CenterIndex(const TreeOctNode *node, const int &maxDepth, int index[DIMENSION]);
 	static long long CenterIndex(const TreeOctNode *node, const int &maxDepth);
@@ -372,15 +372,15 @@ public:
 	static double MemoryUsage(void);
 	std::vector<Point3D<Real>> *normals;
 	Real postNormalSmooth;
-	TreeOctNode tree;
+	TreeOctNode m_TreeOctNode;
 	FunctionData<Degree, double> fData;
 	Octree(void);
 
 	void setFunctionData(const PPolynomial<Degree> &ReconstructionFunction, const int &maxDepth, const int &normalize, const Real &normalSmooth = -1);
 	void finalize1(const int &refineNeighbors = -1);
 	void finalize2(const int &refineNeighbors = -1);
-	
-	// 
+
+	//
 	int setTree(char *fileName, const int &maxDepth, const int &binary, const int &kernelDepth, const Real &samplesPerNode,
 				const Real &scaleFactor, Point3D<Real> &center, Real &scale, const int &resetSampleDepths = 1);
 

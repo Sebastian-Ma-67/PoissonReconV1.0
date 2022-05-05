@@ -8,7 +8,7 @@
             // Resolved by CMake Tools:
             "program": "${workspaceFolder}/Bin/Linux/PoissonRecon",
             "args": ["--in",
-                 "${workspaceFolder}/Bin/Linux/bunny_Cloud.pn", 
+                 "${workspaceFolder}/Bin/Linux/SmallBunnyCloud.pn", 
                  "--out", 
                  "${workspaceFolder}/Bin/Linux/bunny.ply", 
                  "--depth",

@@ -2399,7 +2399,7 @@ void OctNode<NodeData, Real>::Neighbors::clear(void)
 		{
 			for (int k = 0; k < 3; k++)
 			{
-				neighbors[i][j][k] = NULL;
+				neighborsOctNode[i][j][k] = NULL;
 			}
 		}
 	}
@@ -2434,75 +2434,75 @@ template <class NodeData, class Real>
 typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKey::setNeighbors(OctNode<NodeData, Real> *node)
 {
 	int d = node->depth();
-	if (node != neighbors[d].neighbors[1][1][1]) // 如果不是自己的话（[1][1][1]代表自己）
+	if (node != neighbors[d].neighborsOctNode[1][1][1]) // 如果不是自己的话（[1][1][1]代表自己）;这个neighbors是谁的呢？它应该属于某个OctNode的，但是，它又是属于哪个OctNode的呢？
 	{
-		neighbors[d].clear();
+		neighbors[d].clear(); // 为啥要clear
 
 		if (!node->parent) // 
 		{
-			neighbors[d].neighbors[1][1][1] = node; // 如果该节点没有父节点的话，则将该节点放在中心位置，即[1][1][1]
+			neighbors[d].neighborsOctNode[1][1][1] = node; // 如果该节点没有父节点的话，则将该节点放在中心位置，即[1][1][1]
 		}
 		else
 		{
 			int i, j, k, x1, y1, z1, x2, y2, z2;
-			int idx = int(node - node->parent->children);
+			int idx = int(node - node->parent->children); // 该子node是该父node的第idx个子node
 			Cube::FactorCornerIndex(idx, x1, y1, z1);
 			Cube::FactorCornerIndex((~idx) & 7, x2, y2, z2);
-			for (i = 0; i < 2; i++) // 为什么只有0, 1呢？ 那是因为我们构建的是8叉树，2x2x2=8
+			for (i = 0; i < 2; i++) // 为什么只有0, 1呢, 那是因为我们构建的是8叉树，2x2x2=8
 			{
 				for (j = 0; j < 2; j++)
 				{
 					for (k = 0; k < 2; k++)
 					{
-						neighbors[d].neighbors[x2 + i][y2 + j][z2 + k] = &node->parent->children[Cube::CornerIndex(i, j, k)];
+						neighbors[d].neighborsOctNode[x2 + i][y2 + j][z2 + k] = &node->parent->children[Cube::CornerIndex(i, j, k)];
 					}
 				}
 			}
-			Neighbors &temp = setNeighbors(node->parent); // 这里主要是将temp重新指向parent;因为在前面，我们将parent指向了children
+			Neighbors &tempNeighbors = setNeighbors(node->parent); // 这里主要是将temp重新指向parent;因为在前面，我们将parent指向了children
 
 			// Set the neighbors from across the faces
 			i = x1 << 1;
-			if (temp.neighbors[i][1][1])
+			if (tempNeighbors.neighborsOctNode[i][1][1])
 			{
-				if (!temp.neighbors[i][1][1]->children)
+				if (!tempNeighbors.neighborsOctNode[i][1][1]->children)
 				{
-					temp.neighbors[i][1][1]->initChildren();
+					tempNeighbors.neighborsOctNode[i][1][1]->initChildren();
 				}
 				for (j = 0; j < 2; j++)
 				{
 					for (k = 0; k < 2; k++)
 					{
-						neighbors[d].neighbors[i][y2 + j][z2 + k] = &temp.neighbors[i][1][1]->children[Cube::CornerIndex(x2, j, k)];
+						neighbors[d].neighborsOctNode[i][y2 + j][z2 + k] = &tempNeighbors.neighborsOctNode[i][1][1]->children[Cube::CornerIndex(x2, j, k)];
 					}
 				}
 			}
 			j = y1 << 1;
-			if (temp.neighbors[1][j][1])
+			if (tempNeighbors.neighborsOctNode[1][j][1])
 			{
-				if (!temp.neighbors[1][j][1]->children)
+				if (!tempNeighbors.neighborsOctNode[1][j][1]->children)
 				{
-					temp.neighbors[1][j][1]->initChildren();
+					tempNeighbors.neighborsOctNode[1][j][1]->initChildren();
 				}
 				for (i = 0; i < 2; i++)
 				{
 					for (k = 0; k < 2; k++)
 					{
-						neighbors[d].neighbors[x2 + i][j][z2 + k] = &temp.neighbors[1][j][1]->children[Cube::CornerIndex(i, y2, k)];
+						neighbors[d].neighborsOctNode[x2 + i][j][z2 + k] = &tempNeighbors.neighborsOctNode[1][j][1]->children[Cube::CornerIndex(i, y2, k)];
 					}
 				}
 			}
 			k = z1 << 1;
-			if (temp.neighbors[1][1][k])
+			if (tempNeighbors.neighborsOctNode[1][1][k])
 			{
-				if (!temp.neighbors[1][1][k]->children)
+				if (!tempNeighbors.neighborsOctNode[1][1][k]->children)
 				{
-					temp.neighbors[1][1][k]->initChildren();
+					tempNeighbors.neighborsOctNode[1][1][k]->initChildren();
 				}
 				for (i = 0; i < 2; i++)
 				{
 					for (j = 0; j < 2; j++)
 					{
-						neighbors[d].neighbors[x2 + i][y2 + j][k] = &temp.neighbors[1][1][k]->children[Cube::CornerIndex(i, j, z2)];
+						neighbors[d].neighborsOctNode[x2 + i][y2 + j][k] = &tempNeighbors.neighborsOctNode[1][1][k]->children[Cube::CornerIndex(i, j, z2)];
 					}
 				}
 			}
@@ -2510,41 +2510,41 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 			// Set the neighbors from across the edges
 			i = x1 << 1;
 			j = y1 << 1;
-			if (temp.neighbors[i][j][1])
+			if (tempNeighbors.neighborsOctNode[i][j][1])
 			{
-				if (!temp.neighbors[i][j][1]->children)
+				if (!tempNeighbors.neighborsOctNode[i][j][1]->children)
 				{
-					temp.neighbors[i][j][1]->initChildren();
+					tempNeighbors.neighborsOctNode[i][j][1]->initChildren();
 				}
 				for (k = 0; k < 2; k++)
 				{
-					neighbors[d].neighbors[i][j][z2 + k] = &temp.neighbors[i][j][1]->children[Cube::CornerIndex(x2, y2, k)];
+					neighbors[d].neighborsOctNode[i][j][z2 + k] = &tempNeighbors.neighborsOctNode[i][j][1]->children[Cube::CornerIndex(x2, y2, k)];
 				}
 			}
 			i = x1 << 1;
 			k = z1 << 1;
-			if (temp.neighbors[i][1][k])
+			if (tempNeighbors.neighborsOctNode[i][1][k])
 			{
-				if (!temp.neighbors[i][1][k]->children)
+				if (!tempNeighbors.neighborsOctNode[i][1][k]->children)
 				{
-					temp.neighbors[i][1][k]->initChildren();
+					tempNeighbors.neighborsOctNode[i][1][k]->initChildren();
 				}
 				for (j = 0; j < 2; j++)
 				{
-					neighbors[d].neighbors[i][y2 + j][k] = &temp.neighbors[i][1][k]->children[Cube::CornerIndex(x2, j, z2)];
+					neighbors[d].neighborsOctNode[i][y2 + j][k] = &tempNeighbors.neighborsOctNode[i][1][k]->children[Cube::CornerIndex(x2, j, z2)];
 				}
 			}
 			j = y1 << 1;
 			k = z1 << 1;
-			if (temp.neighbors[1][j][k])
+			if (tempNeighbors.neighborsOctNode[1][j][k])
 			{
-				if (!temp.neighbors[1][j][k]->children)
+				if (!tempNeighbors.neighborsOctNode[1][j][k]->children)
 				{
-					temp.neighbors[1][j][k]->initChildren();
+					tempNeighbors.neighborsOctNode[1][j][k]->initChildren();
 				}
 				for (i = 0; i < 2; i++)
 				{
-					neighbors[d].neighbors[x2 + i][j][k] = &temp.neighbors[1][j][k]->children[Cube::CornerIndex(i, y2, z2)];
+					neighbors[d].neighborsOctNode[x2 + i][j][k] = &tempNeighbors.neighborsOctNode[1][j][k]->children[Cube::CornerIndex(i, y2, z2)];
 				}
 			}
 
@@ -2552,13 +2552,13 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 			i = x1 << 1;
 			j = y1 << 1;
 			k = z1 << 1;
-			if (temp.neighbors[i][j][k])
+			if (tempNeighbors.neighborsOctNode[i][j][k])
 			{
-				if (!temp.neighbors[i][j][k]->children)
+				if (!tempNeighbors.neighborsOctNode[i][j][k]->children)
 				{
-					temp.neighbors[i][j][k]->initChildren();
+					tempNeighbors.neighborsOctNode[i][j][k]->initChildren();
 				}
-				neighbors[d].neighbors[i][j][k] = &temp.neighbors[i][j][k]->children[Cube::CornerIndex(x2, y2, z2)];
+				neighbors[d].neighborsOctNode[i][j][k] = &tempNeighbors.neighborsOctNode[i][j][k]->children[Cube::CornerIndex(x2, y2, z2)];
 			}
 		}
 	}
@@ -2569,13 +2569,13 @@ template <class NodeData, class Real>
 typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKey::getNeighbors(OctNode<NodeData, Real> *node)
 {
 	int d = node->depth;
-	if (node != neighbors[d].neighbors[1][1][1])
+	if (node != neighbors[d].neighborsOctNode[1][1][1])
 	{
 		neighbors[d].clear();
 
 		if (!node->parent)
 		{
-			neighbors[d].neighbors[1][1][1] = node;
+			neighbors[d].neighborsOctNode[1][1][1] = node;
 		}
 		else
 		{
@@ -2589,7 +2589,7 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 				{
 					for (k = 0; k < 2; k++)
 					{
-						neighbors[d].neighbors[x2 + i][y2 + j][z2 + k] = &node->parent->children[Cube::CornerIndex(i, j, k)];
+						neighbors[d].neighborsOctNode[x2 + i][y2 + j][z2 + k] = &node->parent->children[Cube::CornerIndex(i, j, k)];
 					}
 				}
 			}
@@ -2597,35 +2597,35 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 
 			// Set the neighbors from across the faces
 			i = x1 << 1;
-			if (temp.neighbors[i][1][1] && temp.neighbors[i][1][1]->children)
+			if (temp.neighborsOctNode[i][1][1] && temp.neighborsOctNode[i][1][1]->children)
 			{
 				for (j = 0; j < 2; j++)
 				{
 					for (k = 0; k < 2; k++)
 					{
-						neighbors[d].neighbors[i][y2 + j][z2 + k] = &temp.neighbors[i][1][1]->children[Cube::CornerIndex(x2, j, k)];
+						neighbors[d].neighborsOctNode[i][y2 + j][z2 + k] = &temp.neighborsOctNode[i][1][1]->children[Cube::CornerIndex(x2, j, k)];
 					}
 				}
 			}
 			j = y1 << 1;
-			if (temp.neighbors[1][j][1] && temp.neighbors[1][j][1]->children)
+			if (temp.neighborsOctNode[1][j][1] && temp.neighborsOctNode[1][j][1]->children)
 			{
 				for (i = 0; i < 2; i++)
 				{
 					for (k = 0; k < 2; k++)
 					{
-						neighbors[d].neighbors[x2 + i][j][z2 + k] = &temp.neighbors[1][j][1]->children[Cube::CornerIndex(i, y2, k)];
+						neighbors[d].neighborsOctNode[x2 + i][j][z2 + k] = &temp.neighborsOctNode[1][j][1]->children[Cube::CornerIndex(i, y2, k)];
 					}
 				}
 			}
 			k = z1 << 1;
-			if (temp.neighbors[1][1][k] && temp.neighbors[1][1][k]->children)
+			if (temp.neighborsOctNode[1][1][k] && temp.neighborsOctNode[1][1][k]->children)
 			{
 				for (i = 0; i < 2; i++)
 				{
 					for (j = 0; j < 2; j++)
 					{
-						neighbors[d].neighbors[x2 + i][y2 + j][k] = &temp.neighbors[1][1][k]->children[Cube::CornerIndex(i, j, z2)];
+						neighbors[d].neighborsOctNode[x2 + i][y2 + j][k] = &temp.neighborsOctNode[1][1][k]->children[Cube::CornerIndex(i, j, z2)];
 					}
 				}
 			}
@@ -2633,29 +2633,29 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 			// Set the neighbors from across the edges
 			i = x1 << 1;
 			j = y1 << 1;
-			if (temp.neighbors[i][j][1] && temp.neighbors[i][j][1]->children)
+			if (temp.neighborsOctNode[i][j][1] && temp.neighborsOctNode[i][j][1]->children)
 			{
 				for (k = 0; k < 2; k++)
 				{
-					neighbors[d].neighbors[i][j][z2 + k] = &temp.neighbors[i][j][1]->children[Cube::CornerIndex(x2, y2, k)];
+					neighbors[d].neighborsOctNode[i][j][z2 + k] = &temp.neighborsOctNode[i][j][1]->children[Cube::CornerIndex(x2, y2, k)];
 				}
 			}
 			i = x1 << 1;
 			k = z1 << 1;
-			if (temp.neighbors[i][1][k] && temp.neighbors[i][1][k]->children)
+			if (temp.neighborsOctNode[i][1][k] && temp.neighborsOctNode[i][1][k]->children)
 			{
 				for (j = 0; j < 2; j++)
 				{
-					neighbors[d].neighbors[i][y2 + j][k] = &temp.neighbors[i][1][k]->children[Cube::CornerIndex(x2, j, z2)];
+					neighbors[d].neighborsOctNode[i][y2 + j][k] = &temp.neighborsOctNode[i][1][k]->children[Cube::CornerIndex(x2, j, z2)];
 				}
 			}
 			j = y1 << 1;
 			k = z1 << 1;
-			if (temp.neighbors[1][j][k] && temp.neighbors[1][j][k]->children)
+			if (temp.neighborsOctNode[1][j][k] && temp.neighborsOctNode[1][j][k]->children)
 			{
 				for (i = 0; i < 2; i++)
 				{
-					neighbors[d].neighbors[x2 + i][j][k] = &temp.neighbors[1][j][k]->children[Cube::CornerIndex(i, y2, z2)];
+					neighbors[d].neighborsOctNode[x2 + i][j][k] = &temp.neighborsOctNode[1][j][k]->children[Cube::CornerIndex(i, y2, z2)];
 				}
 			}
 
@@ -2663,9 +2663,9 @@ typename OctNode<NodeData, Real>::Neighbors &OctNode<NodeData, Real>::NeighborKe
 			i = x1 << 1;
 			j = y1 << 1;
 			k = z1 << 1;
-			if (temp.neighbors[i][j][k] && temp.neighbors[i][j][k]->children)
+			if (temp.neighborsOctNode[i][j][k] && temp.neighborsOctNode[i][j][k]->children)
 			{
-				neighbors[d].neighbors[i][j][k] = &temp.neighbors[i][j][k]->children[Cube::CornerIndex(x2, y2, z2)];
+				neighbors[d].neighborsOctNode[i][j][k] = &temp.neighborsOctNode[i][j][k]->children[Cube::CornerIndex(x2, y2, z2)];
 			}
 		}
 	}

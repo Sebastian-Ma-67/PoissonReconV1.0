@@ -327,10 +327,10 @@ int Execute(int argc, char *argv[])
 				 center,
 				 scale,
 				 !NoResetSamples.set);
-				 
+
 	DumpOutput2(comments[commentNum++], "#             Tree set in: %9.1f (s), %9.1f (MB)\n", Time() - t, tree.maxMemoryUsage);
-	DumpOutput("Leaves/Nodes: %d/%d\n", tree.tree.leaves(), tree.tree.nodes());
-	DumpOutput("   Tree Size: %.3f MB\n", float(sizeof(TreeOctNode) * tree.tree.nodes()) / (1 << 20));
+	DumpOutput("Leaves/Nodes: %d/%d\n", tree.m_TreeOctNode.leaves(), tree.m_TreeOctNode.nodes());
+	DumpOutput("   Tree Size: %.3f MB\n", float(sizeof(TreeOctNode) * tree.m_TreeOctNode.nodes()) / (1 << 20));
 	DumpOutput("Memory Usage: %.3f MB\n", float(MemoryInfo::Usage()) / (1 << 20));
 
 	if (!NoClipTree.set)
@@ -338,14 +338,14 @@ int Execute(int argc, char *argv[])
 		t = Time();
 		tree.ClipTree();
 		DumpOutput("Tree Clipped In: %lg\n", Time() - t);
-		DumpOutput("Leaves/Nodes: %d/%d\n", tree.tree.leaves(), tree.tree.nodes());
-		DumpOutput("   Tree Size: %.3f MB\n", float(sizeof(TreeOctNode) * tree.tree.nodes()) / (1 << 20));
+		DumpOutput("Leaves/Nodes: %d/%d\n", tree.m_TreeOctNode.leaves(), tree.m_TreeOctNode.nodes());
+		DumpOutput("   Tree Size: %.3f MB\n", float(sizeof(TreeOctNode) * tree.m_TreeOctNode.nodes()) / (1 << 20));
 	}
 
 	t = Time();
 	tree.finalize1(refine);
 	DumpOutput("Finalized 1 In: %lg\n", Time() - t);
-	DumpOutput("Leaves/Nodes: %d/%d\n", tree.tree.leaves(), tree.tree.nodes());
+	DumpOutput("Leaves/Nodes: %d/%d\n", tree.m_TreeOctNode.leaves(), tree.m_TreeOctNode.nodes());
 	DumpOutput("Memory Usage: %.3f MB\n", float(MemoryInfo::Usage()) / (1 << 20));
 
 	t = Time();
@@ -358,7 +358,7 @@ int Execute(int argc, char *argv[])
 	t = Time();
 	tree.finalize2(refine);
 	DumpOutput("Finalized 2 In: %lg\n", Time() - t);
-	DumpOutput("Leaves/Nodes: %d/%d\n", tree.tree.leaves(), tree.tree.nodes());
+	DumpOutput("Leaves/Nodes: %d/%d\n", tree.m_TreeOctNode.leaves(), tree.m_TreeOctNode.nodes());
 	DumpOutput("Memory Usage: %.3f MB\n", float(MemoryInfo::Usage()) / (1 << 20));
 
 	tree.maxMemoryUsage = 0;
