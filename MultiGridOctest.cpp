@@ -333,17 +333,17 @@ int Execute(int argc, char *argv[])
 	DumpOutput("   Tree Size: %.3f MB\n", float(sizeof(TreeOctNode) * tree.m_TreeOctNode.nodes()) / (1 << 20));
 	DumpOutput("Memory Usage: %.3f MB\n", float(MemoryInfo::Usage()) / (1 << 20));
 
-	if (!NoClipTree.set)
+	if (!NoClipTree.set) // 如果没说明不让修剪octree的话，我们要默认进行修剪
 	{
 		t = Time();
-		tree.ClipTree();
+		tree.ClipTree(); // 对那些没有法向量的空结点进行修建，将其置为NULL
 		DumpOutput("Tree Clipped In: %lg\n", Time() - t);
 		DumpOutput("Leaves/Nodes: %d/%d\n", tree.m_TreeOctNode.leaves(), tree.m_TreeOctNode.nodes());
 		DumpOutput("   Tree Size: %.3f MB\n", float(sizeof(TreeOctNode) * tree.m_TreeOctNode.nodes()) / (1 << 20));
 	}
 
 	t = Time();
-	tree.finalize1(refine);
+	tree.finalize1(refine); // 这个finalize1咱现在也没搞清楚是怎么计算的，暂时先放过它
 	DumpOutput("Finalized 1 In: %lg\n", Time() - t);
 	DumpOutput("Leaves/Nodes: %d/%d\n", tree.m_TreeOctNode.leaves(), tree.m_TreeOctNode.nodes());
 	DumpOutput("Memory Usage: %.3f MB\n", float(MemoryInfo::Usage()) / (1 << 20));
@@ -356,7 +356,7 @@ int Execute(int argc, char *argv[])
 	DumpOutput("Memory Usage: %.3f MB\n", float(MemoryInfo::Usage()) / (1 << 20));
 
 	t = Time();
-	tree.finalize2(refine);
+	tree.finalize2(refine); // 这个finalize2咱现在也没搞清楚是怎么计算的，暂时先放过它
 	DumpOutput("Finalized 2 In: %lg\n", Time() - t);
 	DumpOutput("Leaves/Nodes: %d/%d\n", tree.m_TreeOctNode.leaves(), tree.m_TreeOctNode.nodes());
 	DumpOutput("Memory Usage: %.3f MB\n", float(MemoryInfo::Usage()) / (1 << 20));
